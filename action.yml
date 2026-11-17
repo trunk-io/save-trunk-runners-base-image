@@ -1,0 +1,36 @@
+name: Save Trunk Runners base image
+description: >-
+  Saves the disk of this job as a Trunk Runners base image (template) when the
+  job passes. Use it as the first step of a job that runs on an image
+  generation runner (`image-gen=true` in runs-on).
+author: Trunk
+branding:
+  icon: save
+  color: green
+
+inputs:
+  name:
+    description: >-
+      The name of the base image. 1 to 63 characters: lowercase letters,
+      digits and `-`, and it must not start with `-`. Jobs boot it with
+      `template=<name>` in runs-on.
+    required: true
+  version:
+    description: >-
+      The major version, as `<major>.*` (major 1 to 999). Trunk Runners gives
+      each saved disk the next minor version of that major.
+    required: false
+    default: "1.*"
+  remove-ssh-and-git-config:
+    description: >-
+      Remove ~/.ssh and ~/.gitconfig before the disk is saved. Actions such as
+      webfactory/ssh-agent write deploy keys and git settings there. Every job
+      that boots the base image can read its disk.
+    required: false
+    default: "true"
+
+runs:
+  using: node24
+  main: src/main.js
+  post: src/post.js
+  post-if: success()

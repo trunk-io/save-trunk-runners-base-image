@@ -1,0 +1,10 @@
+{
+  "name": "save-trunk-runners-base-image",
+  "private": true,
+  "description": "GitHub Action: save the disk of a Trunk Runners job as a base image when the job passes.",
+  "license": "MIT",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test"
+  }
+}
