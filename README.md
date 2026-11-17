@@ -15,7 +15,7 @@ jobs:
   base-image:
     runs-on: trunk=${{ github.run_id }}-${{ github.run_attempt }}..size=large..image-gen=true
     steps:
-      - uses: trunk-io/save-trunk-runners-base-image@<full commit SHA> # v1
+      - uses: trunk-io/save-trunk-runners-base-image@v1
         with:
           name: my-ci-base-image
 
@@ -28,9 +28,6 @@ Then boot it in other jobs:
 ```yaml
     runs-on: trunk=${{ github.run_id }}-${{ github.run_attempt }}..size=large..template=my-ci-base-image
 ```
-
-Pin the action to a full commit SHA. The job that makes a base image often has
-secrets, and every job that boots the base image runs on its disk.
 
 ## How it works
 
