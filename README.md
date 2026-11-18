@@ -38,9 +38,6 @@ Then boot it in other jobs:
   boots that base image for the tests, and checks that the marker file is
   there.
 
-The examples run only when the repository variable `TRUNK_RUNNERS_EXAMPLES`
-is `true`.
-
 ## How it works
 
 - **When the job starts** (the main step), the action checks the inputs and

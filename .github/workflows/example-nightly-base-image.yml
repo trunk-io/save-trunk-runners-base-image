@@ -8,11 +8,6 @@
 #
 # Trunk Runners saves the disk only for a `schedule`, `push` or
 # `workflow_dispatch` run on the default branch.
-#
-# This example runs only when the repository variable
-# TRUNK_RUNNERS_EXAMPLES is `true`. Without Trunk Runners for this
-# organization, no runner takes the job, and the job waits for GitHub's
-# 24-hour queue limit.
 name: Example nightly base image
 
 on:
@@ -25,7 +20,6 @@ permissions:
 
 jobs:
   base-image:
-    if: vars.TRUNK_RUNNERS_EXAMPLES == 'true'
     runs-on: trunk=${{ github.run_id }}-${{ github.run_attempt }}..size=small..image-gen=true
     timeout-minutes: 30
     steps:

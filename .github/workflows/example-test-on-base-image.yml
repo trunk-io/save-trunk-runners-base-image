@@ -8,10 +8,8 @@
 # When no version is released yet (before the first nightly job passes, or
 # after the template is deleted), no runner takes the job. timeout-minutes
 # does not cover queue time, so the job waits for GitHub's 24-hour queue
-# limit. Run the nightly workflow once before you turn on this workflow.
-#
-# This example runs only when the repository variable TRUNK_RUNNERS_EXAMPLES
-# is `true`.
+# limit. Save the first version of the base image before you add this
+# workflow.
 name: Example test on base image
 
 on:
@@ -28,9 +26,8 @@ jobs:
     # This repository is public. Do not run the code of a fork pull request on
     # a self-hosted runner.
     if: >-
-      vars.TRUNK_RUNNERS_EXAMPLES == 'true' &&
-      (github.event_name != 'pull_request' ||
-      github.event.pull_request.head.repo.full_name == github.repository)
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: trunk=${{ github.run_id }}-${{ github.run_attempt }}..size=small..template=example-nightly-base-image
     timeout-minutes: 15
     steps:
