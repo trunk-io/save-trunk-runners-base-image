@@ -29,6 +29,15 @@ Then boot it in other jobs:
     runs-on: trunk=${{ github.run_id }}-${{ github.run_attempt }}..size=large..template=my-ci-base-image
 ```
 
+## Examples
+
+- [`example-nightly-base-image.yml`](.github/workflows/example-nightly-base-image.yml)
+  saves a base image each night: it installs Node.js in the tool cache, pulls
+  a container image and writes a marker file.
+- [`example-test-on-base-image.yml`](.github/workflows/example-test-on-base-image.yml)
+  boots that base image for the tests, and checks that the marker file is
+  there.
+
 ## How it works
 
 - **When the job starts** (the main step), the action checks the inputs and

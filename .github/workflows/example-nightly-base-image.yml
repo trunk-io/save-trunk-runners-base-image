@@ -1,0 +1,54 @@
+# Example: save a base image each night.
+#
+# The job runs on an image generation runner (`image-gen=true` in runs-on). It
+# installs the tools and fills the caches that the test jobs need. When the job
+# passes, Trunk Runners saves its disk as the base image
+# `example-nightly-base-image`. The workflow example-test-on-base-image.yml
+# boots that image.
+#
+# Trunk Runners saves the disk only for a `schedule`, `push` or
+# `workflow_dispatch` run on the default branch.
+name: Example nightly base image
+
+on:
+  schedule:
+    - cron: 23 4 * * *
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  base-image:
+    runs-on: trunk=${{ github.run_id }}-${{ github.run_attempt }}..size=small..image-gen=true
+    timeout-minutes: 30
+    steps:
+      # The first step. Its post step runs last, so no other step changes the
+      # disk after the request.
+      - uses: trunk-io/save-trunk-runners-base-image@v1
+        with:
+          name: example-nightly-base-image
+
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # setup-node installs Node.js in the tool cache on the disk. A job that
+      # boots the base image finds it there and downloads nothing.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      # Pull the container images that the test jobs use.
+      - name: Pull container images
+        run: docker pull --quiet node:24-slim
+
+      # The test job reads this file to find the age of the base image.
+      - name: Write a marker file
+        run: |
+          echo "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT} $(date +%s)" | sudo tee /etc/example-nightly-base-image >/dev/null
+
+      # Do not save a broken disk: the job fails, so Trunk Runners saves
+      # nothing and the test jobs keep the last good base image.
+      - name: Test the tools
+        run: node --test

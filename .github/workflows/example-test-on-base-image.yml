@@ -1,0 +1,67 @@
+# Example: run tests on the base image that example-nightly-base-image.yml
+# saves.
+#
+# `template=example-nightly-base-image` in runs-on boots the newest released
+# version of the base image. The tools, the tool cache and the container
+# images of the nightly job are already on the disk.
+#
+# When no version is released yet (before the first nightly job passes, or
+# after the template is deleted), no runner takes the job. timeout-minutes
+# does not cover queue time, so the job waits for GitHub's 24-hour queue
+# limit. Save the first version of the base image before you add this
+# workflow.
+name: Example test on base image
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    # This repository is public. Do not run the code of a fork pull request on
+    # a self-hosted runner.
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: trunk=${{ github.run_id }}-${{ github.run_attempt }}..size=small..template=example-nightly-base-image
+    timeout-minutes: 15
+    steps:
+      # Fail at once if the runner did not boot the base image, or if the
+      # base image is old because the nightly job did not pass.
+      - name: Check the base image
+        run: |
+          set -euo pipefail
+          if [[ ! -f /etc/example-nightly-base-image ]]; then
+            echo "::error::/etc/example-nightly-base-image is missing. The runner did not boot the base image."
+            exit 1
+          fi
+          marker=$(cat /etc/example-nightly-base-image)
+          echo "base image from run ${marker% *}"
+          age=$(($(date +%s) - ${marker##* }))
+          echo "base image age: $((age / 3600)) h"
+          if ((age > 48 * 3600)); then
+            echo "::warning::The base image is more than 48 hours old. Look at the last runs of example-nightly-base-image.yml."
+          fi
+
+      # The base image does not keep the checkout, so check out the code.
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # Node.js is in the tool cache of the base image, so this step
+      # downloads nothing.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Test
+        run: node --test
+
+      # The image is on the disk, so `docker run` does not pull it.
+      - name: Test in a container
+        run: docker run --rm --pull=never -v "${PWD}:/src" -w /src node:24-slim node --test
